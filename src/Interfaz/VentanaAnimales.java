@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import modelo.Animal;
+import modelo.Gato;
+import modelo.Perro;
 import negocio.GestorAnimales;
 
 public class VentanaAnimales extends JFrame implements ActionListener {
@@ -151,12 +153,22 @@ public class VentanaAnimales extends JFrame implements ActionListener {
             // Si escribió letras, se queda en -1 y el gestor muestra el error
         }
 
-        Animal nuevo = new Animal(gestor.generarCodigo(), txtNombre.getText().trim(),
-                (String) cmbEspecie.getSelectedItem(), txtRaza.getText().trim(),
-                (String) cmbSexo.getSelectedItem(), peso, edad,
-                (String) cmbTamanio.getSelectedItem(), (String) cmbEnergia.getSelectedItem(),
-                (String) cmbSalud.getSelectedItem(), txtHistorial.getText().trim(),
-                txtIngreso.getText().trim());
+        String especie = (String) cmbEspecie.getSelectedItem();
+        String codigo = gestor.generarCodigo();
+        String sexo = (String) cmbSexo.getSelectedItem();
+        String tamanio = (String) cmbTamanio.getSelectedItem();
+        String energia = (String) cmbEnergia.getSelectedItem();
+        String salud = (String) cmbSalud.getSelectedItem();
+
+        // Según la especie se crea un Perro o un Gato
+        Animal nuevo;
+        if (especie.equals("Gato")) {
+            nuevo = new Gato(codigo, txtNombre.getText().trim(), txtRaza.getText().trim(), sexo, peso, edad,
+                    tamanio, energia, salud, txtHistorial.getText().trim(), txtIngreso.getText().trim());
+        } else {
+            nuevo = new Perro(codigo, txtNombre.getText().trim(), txtRaza.getText().trim(), sexo, peso, edad,
+                    tamanio, energia, salud, txtHistorial.getText().trim(), txtIngreso.getText().trim());
+        }
         nuevo.setFechaUltimaAtencion(txtUltimaAtencion.getText().trim());
 
         String mensaje = gestor.registrarAnimal(nuevo);
@@ -187,5 +199,12 @@ public class VentanaAnimales extends JFrame implements ActionListener {
         txtHistorial.setText("");
         txtUltimaAtencion.setText("");
         txtIngreso.setText("");
+    }
+
+    public static void main(String[] args) {
+        GestorAnimales gestor = new GestorAnimales();
+        VentanaAnimales ventana = new VentanaAnimales(gestor);
+        ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ventana.setVisible(true);
     }
 }

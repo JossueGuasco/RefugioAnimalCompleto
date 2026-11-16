@@ -2,7 +2,7 @@ package modelo;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Animal {
+public abstract class Animal {
 
     private String codigo;
     private String nombre;
@@ -332,4 +332,7 @@ public class Animal {
                 + "Nivel de urgencia: " + nivelUrgencia + "\n"
                 + "Estado: " + estado;
     }
+
+    // El peso mínimo normal de un gato es el mismo sin importar el tamaño
+    public abstract double obtenerPesoMinimo();
 }

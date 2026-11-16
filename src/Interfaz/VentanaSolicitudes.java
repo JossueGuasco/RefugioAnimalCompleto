@@ -2,6 +2,7 @@ package Interfaz;
 
 import modelo.Adoptante;
 import modelo.Animal;
+import modelo.Perro;
 import modelo.SolicitudAdopcion;
 import negocio.GestorSolicitudes;
 
@@ -20,8 +21,15 @@ public class VentanaSolicitudes extends JFrame {
     private Adoptante adoptanteValido = new Adoptante("1723456789", "María López", 28, "0987654321", "maria.lopez@gmail.com", "Casa", 90.0, true, 1, "Grande");
     private Adoptante adoptanteRestringido = new Adoptante("1709876543", "Carlos Ruíz", 30, "0998887766", "carlos.ruiz@gmail.com", "Departamento", 45.0, false, 0, "Grande");
 
-    private Animal animalDisponible = new Animal("ANI-0001", "Firulais", "Perro", "Grande", "Medio", "Disponible");
-    private Animal animalEnEvaluacion = new Animal("ANI-0003", "Max", "Perro", "Mediano", "Alto", "En evaluación");
+    private Animal animalDisponible = crearAnimalDemo("ANI-0001", "Firulais", "Grande", "Medio", "Disponible");
+    private Animal animalEnEvaluacion = crearAnimalDemo("ANI-0003", "Max", "Mediano", "Alto", "En evaluación");
+
+    private static Animal crearAnimalDemo(String codigo, String nombre, String tamanio, String energia, String estado) {
+        Animal animal = new Perro(codigo, nombre, "Mestizo", "Macho", 10, 24, tamanio, energia,
+                "Sano", "Sin antecedentes", "15/11/2026");
+        animal.actualizarEstadoAnimal(estado);
+        return animal;
+    }
 
     public VentanaSolicitudes() {
         gestor = new GestorSolicitudes();
