@@ -2,13 +2,15 @@ package Interfaz;
 
 import modelo.Adoptante;
 import modelo.Animal;
-import modelo.Perro;
-import modelo.SolicitudAdopcion;
+import negocio.GestorAdoptantes;
+import negocio.GestorAnimales;
 import negocio.GestorSolicitudes;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
@@ -16,27 +18,29 @@ import java.io.PrintStream;
 
 public class VentanaSolicitudes extends JFrame {
     private GestorSolicitudes gestor;
-    private boolean actualizando = false;
+    private GestorAdoptantes gestorAdoptantes;
+    private GestorAnimales gestorAnimales;
 
-    private Adoptante adoptanteValido = new Adoptante("1723456789", "María López", 28, "0987654321", "maria.lopez@gmail.com", "Casa", 90.0, true, 1, "Grande");
-    private Adoptante adoptanteRestringido = new Adoptante("1709876543", "Carlos Ruíz", 30, "0998887766", "carlos.ruiz@gmail.com", "Departamento", 45.0, false, 0, "Grande");
+    private JTextField txtId;
+    private JTextField txtCedulaAdoptante;
+    private JTextField txtCodigoAnimal;
+    private JTextArea txtResultado;
 
-    private Animal animalDisponible = crearAnimalDemo("ANI-0001", "Firulais", "Grande", "Medio", "Disponible");
-    private Animal animalEnEvaluacion = crearAnimalDemo("ANI-0003", "Max", "Mediano", "Alto", "En evaluación");
-
-    private static Animal crearAnimalDemo(String codigo, String nombre, String tamanio, String energia, String estado) {
-        Animal animal = new Perro(codigo, nombre, "Mestizo", "Macho", 10, 24, tamanio, energia,
-                "Sano", "Sin antecedentes", "15/11/2026");
-        animal.actualizarEstadoAnimal(estado);
-        return animal;
+    public VentanaSolicitudes(GestorSolicitudes gestor, GestorAdoptantes gestorAdoptantes, GestorAnimales gestorAnimales) {
+        this.gestor = gestor;
+        this.gestorAdoptantes = gestorAdoptantes;
+        this.gestorAnimales = gestorAnimales;
+        inicializarComponentes();
     }
 
     public VentanaSolicitudes() {
-        gestor = new GestorSolicitudes();
+        this(new GestorSolicitudes(), new GestorAdoptantes(), new GestorAnimales());
+    }
 
+    private void inicializarComponentes() {
         setTitle("Gestión de Solicitudes de Adopción - Módulo 3");
-        setSize(525, 480);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(525, 520);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(null);
 
@@ -45,101 +49,152 @@ public class VentanaSolicitudes extends JFrame {
         add(lblTitulo);
 
         JLabel lblId = new JLabel("ID Solicitud:");
-        lblId.setBounds(50, 60, 120, 25);
+        lblId.setBounds(50, 60, 140, 25);
         add(lblId);
 
-        JTextField txtId = new JTextField("SOL-001");
-        txtId.setBounds(180, 60, 250, 25);
+        txtId = new JTextField("SOL-001");
+        txtId.setBounds(200, 60, 230, 25);
+        ((AbstractDocument) txtId.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                StringBuilder sb = new StringBuilder(fb.getDocument().getText(0, fb.getDocument().getLength()));
+                sb.insert(offset, string.toUpperCase());
+                if (sb.toString().matches("^(S(O(L(-\\d*)?)?)?)?$")) {
+                    super.insertString(fb, offset, string.toUpperCase(), attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text == null) return;
+                StringBuilder sb = new StringBuilder(fb.getDocument().getText(0, fb.getDocument().getLength()));
+                sb.replace(offset, offset + length, text.toUpperCase());
+                if (sb.toString().matches("^(S(O(L(-\\d*)?)?)?)?$")) {
+                    super.replace(fb, offset, length, text.toUpperCase(), attrs);
+                }
+            }
+        });
         add(txtId);
 
-        JLabel lblAdoptante = new JLabel("Adoptante:");
-        lblAdoptante.setBounds(50, 100, 120, 25);
+        JLabel lblAdoptante = new JLabel("Cédula Adoptante:");
+        lblAdoptante.setBounds(50, 100, 140, 25);
         add(lblAdoptante);
 
-        String[] adoptantesOpciones = {"María López", "Carlos Ruíz"};
-        JComboBox<String> cmbAdoptante = new JComboBox<>(adoptantesOpciones);
-        cmbAdoptante.setBounds(180, 100, 250, 25);
-        add(cmbAdoptante);
+        txtCedulaAdoptante = new JTextField();
+        txtCedulaAdoptante.setBounds(200, 100, 230, 25);
+        ((AbstractDocument) txtCedulaAdoptante.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                StringBuilder sb = new StringBuilder(fb.getDocument().getText(0, fb.getDocument().getLength()));
+                sb.insert(offset, string);
+                if (sb.toString().matches("^\\d{0,10}$")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
 
-        JLabel lblAnimalAsignado = new JLabel("Animal Asignado:");
-        lblAnimalAsignado.setBounds(50, 140, 120, 25);
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text == null) return;
+                StringBuilder sb = new StringBuilder(fb.getDocument().getText(0, fb.getDocument().getLength()));
+                sb.replace(offset, offset + length, text);
+                if (sb.toString().matches("^\\d{0,10}$")) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
+        add(txtCedulaAdoptante);
+
+        JLabel lblAnimalAsignado = new JLabel("Código Animal:");
+        lblAnimalAsignado.setBounds(50, 140, 140, 25);
         add(lblAnimalAsignado);
 
-        String[] animalesOpciones = {"Firulais [Disponible]", "Max [En evaluación]"};
-        JComboBox<String> cmbAnimal = new JComboBox<>(animalesOpciones);
-        cmbAnimal.setBounds(180, 140, 250, 25);
-        add(cmbAnimal);
+        txtCodigoAnimal = new JTextField();
+        txtCodigoAnimal.setBounds(200, 140, 230, 25);
+        ((AbstractDocument) txtCodigoAnimal.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                StringBuilder sb = new StringBuilder(fb.getDocument().getText(0, fb.getDocument().getLength()));
+                sb.insert(offset, string.toUpperCase());
+                if (sb.toString().matches("^(A(N(I(-\\d*)?)?)?)?$")) {
+                    super.insertString(fb, offset, string.toUpperCase(), attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text == null) return;
+                StringBuilder sb = new StringBuilder(fb.getDocument().getText(0, fb.getDocument().getLength()));
+                sb.replace(offset, offset + length, text.toUpperCase());
+                if (sb.toString().matches("^(A(N(I(-\\d*)?)?)?)?$")) {
+                    super.replace(fb, offset, length, text.toUpperCase(), attrs);
+                }
+            }
+        });
+        add(txtCodigoAnimal);
 
         JButton btnRegistrar = new JButton("Registrar Solicitud");
-        btnRegistrar.setBounds(140, 190, 240, 30);
+        btnRegistrar.setBounds(140, 185, 240, 30);
         add(btnRegistrar);
 
         JButton btnEvaluar = new JButton("Procesar Evaluación");
-        btnEvaluar.setBounds(140, 235, 240, 30);
+        btnEvaluar.setBounds(140, 225, 240, 30);
         add(btnEvaluar);
 
-        JTextArea txtResultado = new JTextArea();
+        JButton btnLimpiar = new JButton("Limpiar Campos");
+        btnLimpiar.setBounds(140, 265, 240, 30);
+        add(btnLimpiar);
+
+        txtResultado = new JTextArea();
         txtResultado.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(txtResultado);
-        scrollPane.setBounds(50, 280, 410, 130);
+        scrollPane.setBounds(50, 310, 410, 140);
         add(scrollPane);
-
-        cmbAdoptante.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (actualizando) return;
-                actualizando = true;
-                if (cmbAdoptante.getSelectedIndex() == 0) {
-                    txtId.setText("SOL-001");
-                    cmbAnimal.setSelectedIndex(0);
-                } else {
-                    txtId.setText("SOL-002");
-                    cmbAnimal.setSelectedIndex(1);
-                }
-                actualizando = false;
-            }
-        });
-
-        txtId.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) { actualizarPorId(); }
-            @Override
-            public void removeUpdate(DocumentEvent e) { actualizarPorId(); }
-            @Override
-            public void changedUpdate(DocumentEvent e) { actualizarPorId(); }
-
-            private void actualizarPorId() {
-                if (actualizando) return;
-                actualizando = true;
-                String idTexto = txtId.getText().trim();
-                if (idTexto.equalsIgnoreCase("SOL-001")) {
-                    cmbAdoptante.setSelectedIndex(0);
-                    cmbAnimal.setSelectedIndex(0);
-                } else if (idTexto.equalsIgnoreCase("SOL-002")) {
-                    cmbAdoptante.setSelectedIndex(1);
-                    cmbAnimal.setSelectedIndex(1);
-                }
-                actualizando = false;
-            }
-        });
 
         btnRegistrar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String id = txtId.getText();
-                Adoptante ad;
-                Animal an;
+                String id = txtId.getText().trim();
+                String cedula = txtCedulaAdoptante.getText().trim();
+                String codigoAnimal = txtCodigoAnimal.getText().trim();
 
-                if (cmbAdoptante.getSelectedIndex() == 0) {
-                    ad = adoptanteValido;
-                } else {
-                    ad = adoptanteRestringido;
+                if (id.isEmpty() || cedula.isEmpty() || codigoAnimal.isEmpty()) {
+                    txtResultado.setText("Error: Todos los campos (ID, Cédula y Código de Animal) son obligatorios.");
+                    return;
                 }
 
-                if (cmbAnimal.getSelectedIndex() == 0) {
-                    an = animalDisponible;
-                } else {
-                    an = animalEnEvaluacion;
+                if (!id.matches("^SOL-\\d+$")) {
+                    txtResultado.setText("Error: El ID de solicitud debe tener exactamente el formato SOL-(número), por ejemplo: SOL-001.");
+                    return;
+                }
+
+                if (!cedula.matches("^\\d{10}$")) {
+                    txtResultado.setText("Error: La cédula debe contener exactamente 10 dígitos numéricos.");
+                    return;
+                }
+
+                if (!codigoAnimal.matches("^ANI-\\d+$")) {
+                    txtResultado.setText("Error: El código de animal debe tener exactamente el formato ANI-(número), por ejemplo: ANI-0001.");
+                    return;
+                }
+
+                if (gestor.buscarSolicitudPorId(id) != null) {
+                    txtResultado.setText("Error: El ID de solicitud (" + id + ") ya existe y no puede registrarse nuevamente.");
+                    return;
+                }
+
+                Adoptante ad = gestorAdoptantes.buscarAdoptantePorCedula(cedula);
+                if (ad == null) {
+                    txtResultado.setText("Error: No se encontró ningún adoptante registrado con la cédula: " + cedula);
+                    return;
+                }
+
+                Animal an = gestorAnimales.buscarAnimalPorCodigo(codigoAnimal);
+                if (an == null) {
+                    txtResultado.setText("Error: No se encontró ningún animal registrado con el código: " + codigoAnimal);
+                    return;
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -147,7 +202,7 @@ public class VentanaSolicitudes extends JFrame {
                 PrintStream old = System.out;
                 System.setOut(ps);
 
-                gestor.crearSolicitud(ad, an, id, "12/11/2026");
+                gestor.crearSolicitud(ad, an, id, "17/11/2026");
 
                 System.out.flush();
                 System.setOut(old);
@@ -158,12 +213,29 @@ public class VentanaSolicitudes extends JFrame {
         btnEvaluar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String id = txtId.getText();
-                Animal anSeleccionado = (cmbAnimal.getSelectedIndex() == 0) ? animalDisponible : animalEnEvaluacion;
+                String id = txtId.getText().trim();
+                String codigoAnimal = txtCodigoAnimal.getText().trim();
 
-                if (!anSeleccionado.getEstado().equalsIgnoreCase("Disponible")) {
-                    txtResultado.setText("Error: El animal seleccionado (" + anSeleccionado.getNombre() + ") no está disponible para adopción, no se puede evaluar.");
+                if (id.isEmpty()) {
+                    txtResultado.setText("Error: Ingrese el ID de la solicitud que desea evaluar.");
                     return;
+                }
+
+                if (!id.matches("^SOL-\\d+$")) {
+                    txtResultado.setText("Error: El ID de solicitud debe tener exactamente el formato SOL-(número), por ejemplo: SOL-001.");
+                    return;
+                }
+
+                if (!codigoAnimal.isEmpty()) {
+                    if (!codigoAnimal.matches("^ANI-\\d+$")) {
+                        txtResultado.setText("Error: El código de animal debe tener exactamente el formato ANI-(número), por ejemplo: ANI-0001.");
+                        return;
+                    }
+                    Animal anSeleccionado = gestorAnimales.buscarAnimalPorCodigo(codigoAnimal);
+                    if (anSeleccionado != null && !anSeleccionado.getEstado().equalsIgnoreCase("Disponible")) {
+                        txtResultado.setText("Error: El animal seleccionado (" + anSeleccionado.getNombre() + ") no está disponible para adopción, no se puede evaluar.");
+                        return;
+                    }
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -178,14 +250,19 @@ public class VentanaSolicitudes extends JFrame {
                 txtResultado.setText(baos.toString());
             }
         });
+
+        btnLimpiar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                txtId.setText("SOL-001");
+                txtCedulaAdoptante.setText("");
+                txtCodigoAnimal.setText("");
+                txtResultado.setText("");
+            }
+        });
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new VentanaSolicitudes().setVisible(true);
-            }
-        });
+        SwingUtilities.invokeLater(() -> new VentanaSolicitudes().setVisible(true));
     }
 }
