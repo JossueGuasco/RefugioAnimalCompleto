@@ -101,18 +101,9 @@ public abstract class Animal {
         return 0;
     }
 
+    // El peso mínimo normal lo define cada clase hija (Perro o Gato)
     private int puntosPorPeso() {
-        double pesoMinimo = 0;
-        if (especie.equalsIgnoreCase("Gato")) {
-            pesoMinimo = 2.5;
-        } else if (tamanio.equalsIgnoreCase("Pequeño") || tamanio.equalsIgnoreCase("Pequeno")) {
-            pesoMinimo = 3;
-        } else if (tamanio.equalsIgnoreCase("Mediano")) {
-            pesoMinimo = 10;
-        } else if (tamanio.equalsIgnoreCase("Grande")) {
-            pesoMinimo = 20;
-        }
-        if (peso < pesoMinimo) {
+        if (peso < obtenerPesoMinimo()) {
             return 1;
         }
         return 0;
@@ -333,6 +324,6 @@ public abstract class Animal {
                 + "Estado: " + estado;
     }
 
-    // El peso mínimo normal de un gato es el mismo sin importar el tamaño
+    // Peso mínimo normal en kg: cada clase hija (Perro y Gato) lo calcula a su manera
     public abstract double obtenerPesoMinimo();
 }
